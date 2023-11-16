@@ -28,10 +28,12 @@ fn process_request(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
 
     let http_request: Vec<_> = buf_reader.lines()
-        .map(|ele| ele.unwrap())    // The line is wrapped
+        .map(|ele| ele.unwrap())    // The line is wrapped. Just stops program
         .take_while(|line| !line.is_empty())    // We can stop iterating
         .collect();                             // Convert back into vector
-    println!("HTTP requests: {http_request:#?}");
+
+    let response = "HTTP/1.1 200 OK\r\n\r\n";
+    stream.write_all(response.as_bytes()).unwrap(); // Hand-coded http response
 }
 
 #[cfg(test)]
