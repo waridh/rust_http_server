@@ -1,4 +1,7 @@
-use std::net::{TcpListener, TcpStream};
+use std::{
+    io::{prelude::*, BufReader},    // io::prelude is just the IO heavy modules
+    net::{TcpListener, TcpStream},
+};
 
 struct TcpError;
 
@@ -20,6 +23,21 @@ fn main() {
     }
 }
 
-fn process_request(stream: TcpStream) {
-    println!("Connection Established");
+fn process_request(mut stream: TcpStream) {
+    // We want to buffer the reads from stream to improve performance
+    let buf_reader = BufReader::new(&mut stream);
+
+    let http_request: Vec<_> = buf_reader.lines()
+        .map(|ele| ele.unwrap())    // The line is wrapped
+        .take_while(|line| !line.is_empty())    // We can stop iterating
+        .collect();                             // Convert back into vector
+    println!("HTTP requests: {http_request:#?}");
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn place_holder() {
+        assert!(true);
+    }
 }
