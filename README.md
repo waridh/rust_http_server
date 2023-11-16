@@ -7,8 +7,14 @@ three stages to the project:
 2. Multithreaded http server
 3. Graceful shutdown and cleanup.
 
+## Learning goals
+
+Learn how a project is organized in rust, along with some concepts from
+networking, such as TCP and HTTP protocols. Also write some concurrent code in
+Rust to understand the benefit of memory and type safety in Rust.
+
 ## Progress
 
-- [ ] Single threaded http server
+- [x] Single threaded http server
 - [ ] Multithreaded component
 - [ ] Graceful shutdown and cleanup
