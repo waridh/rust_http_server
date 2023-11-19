@@ -2,7 +2,11 @@ use std::{
     fs, // File system library. Can load files into memory
     io::{prelude::*, BufReader},    // io::prelude is just the IO heavy modules
     net::{TcpListener, TcpStream},
+    thread,
+    time::Duration,
 };
+
+use kiki_delivery_server::ThreadPool;
 
 struct TcpError;
 
@@ -15,12 +19,12 @@ impl std::fmt::Display for TcpError {
 fn main() {
     // Binding the listener to the address. Will act as the host
     let listener = TcpListener::bind("127.0.0.1:27272").unwrap();
+    let pool = ThreadPool::new(4);
 
     // Iterating over connection attempts
     for stream in listener.incoming() { // A single stream is one connection
         let stream = stream.unwrap();   // Failure might occur on failed conn
-        process_request(stream);        // If a stream goes out of scope, the
-                                        // Connection fails
+        pool.execute(|| {process_request(stream);});
     }
 }
 
@@ -30,19 +34,19 @@ fn process_request(mut stream: TcpStream) {
 
     let http_request_line = buf_reader.lines().next().unwrap().unwrap();
 
-    let (status_line, file_name) = if http_request_line == "GET / HTTP/1.1" {
-        // Loading the page
-        let status_line = "HTTP/1.1 200 OK";
-        ("HTTP/1.1 200 OK", "kiki_landing.html")    // The syntax is clean
-    } else {
-        // Enters this when the request is not the basic one
-        // Implement 404 error when this happens
-        ("HTTP/1.1 404 NOT FOUND", "404.html")
+    let (status_line, file_name) = match &http_request_line[..] {
+        "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "kiki_landing.html"),
+        "GET /sleep HTTP/1.1" => {
+            thread::sleep(Duration::from_secs(5));  // To get a block to occur
+            ("HTTP/1.1 200 OK", "kiki_landing.html")
+        },
+        _ => ("HTTP/1.1 404 NOT FOUND", "404.html"),
     };
 
     let contents = fs::read_to_string(file_name).unwrap();
     stream.write_all(response_generator(status_line, contents).as_bytes())
         .unwrap();
+
 }
 
 fn response_generator(status_line: &str, content: String) -> String {
