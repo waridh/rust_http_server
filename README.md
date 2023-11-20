@@ -16,5 +16,5 @@ Rust to understand the benefit of memory and type safety in Rust.
 ## Progress
 
 - [x] Single threaded http server
-- [ ] Multithreaded component
-- [ ] Graceful shutdown and cleanup
+- [x] Multithreaded component
+- [x] Graceful shutdown and cleanup
