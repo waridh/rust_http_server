@@ -22,18 +22,22 @@ fn main() {
     let pool = ThreadPool::new(4);
 
     // Iterating over connection attempts
-    for stream in listener.incoming() { // A single stream is one connection
+    for stream in listener.incoming().take(2) { // A single stream is one connection
         let stream = stream.unwrap();   // Failure might occur on failed conn
         pool.execute(|| {process_request(stream);});
     }
+
+    println!("Shutting down");
 }
 
 fn process_request(mut stream: TcpStream) {
     // We want to buffer the reads from stream to improve performance
     let buf_reader = BufReader::new(&mut stream);
 
+    // Reading the input
     let http_request_line = buf_reader.lines().next().unwrap().unwrap();
 
+    // Obtain the appropriate response
     let (status_line, file_name) = match &http_request_line[..] {
         "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "kiki_landing.html"),
         "GET /sleep HTTP/1.1" => {
@@ -62,7 +66,9 @@ mod test {
     // function testing for response generation
     #[test]
     fn test_response_generator() {
-        let expected_output1 = String::from("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
-        assert_eq!(response_generator("HTTP/1.1 200 OK", String::from("")), expected_output1);
+        let expected_output1 = String::from(
+            "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
+        assert_eq!(response_generator("HTTP/1.1 200 OK", String::from("")),
+        expected_output1);
     }
 }
